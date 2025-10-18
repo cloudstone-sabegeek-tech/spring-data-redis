@@ -33,9 +33,10 @@ import org.springframework.data.redis.StringObjectFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.extension.LettuceConnectionFactoryExtension;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.GenericToStringSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson3JsonRedisSerializer;
+import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.OxmSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
@@ -101,13 +102,18 @@ abstract public class ReactiveOperationsTestParams {
 		ReactiveRedisTemplate<String, Person> jackson2JsonPersonTemplate = new ReactiveRedisTemplate(
 				lettuceConnectionFactory, RedisSerializationContext.fromSerializer(jackson2JsonSerializer));
 
-		Jackson3JsonRedisSerializer<Person> jackson3JsonSerializer = new Jackson3JsonRedisSerializer<>(Person.class);
+		JacksonJsonRedisSerializer<Person> jackson3JsonSerializer = new JacksonJsonRedisSerializer<>(Person.class);
 		ReactiveRedisTemplate<String, Person> jackson3JsonPersonTemplate = new ReactiveRedisTemplate(
 			lettuceConnectionFactory, RedisSerializationContext.fromSerializer(jackson3JsonSerializer));
 
 		GenericJackson2JsonRedisSerializer genericJackson2JsonSerializer = new GenericJackson2JsonRedisSerializer();
 		ReactiveRedisTemplate<String, Person> genericJackson2JsonPersonTemplate = new ReactiveRedisTemplate(
 				lettuceConnectionFactory, RedisSerializationContext.fromSerializer(genericJackson2JsonSerializer));
+
+		GenericJacksonJsonRedisSerializer genericJacksonJsonSerializer = GenericJacksonJsonRedisSerializer
+            .create(it -> it.enableSpringCacheNullValueSupport().enableUnsafeDefaultTyping());
+		ReactiveRedisTemplate<String, Person> genericJacksonJsonPersonTemplate = new ReactiveRedisTemplate(
+				lettuceConnectionFactory, RedisSerializationContext.fromSerializer(genericJacksonJsonSerializer));
 
 		List<Fixture<?, ?>> list = Arrays.asList( //
 				new Fixture<>(stringTemplate, stringFactory, stringFactory, stringRedisSerializer, "String"), //
@@ -122,7 +128,9 @@ abstract public class ReactiveOperationsTestParams {
 				new Fixture<>(jackson2JsonPersonTemplate, stringFactory, personFactory, jackson2JsonSerializer, "Jackson2"), //
 				new Fixture<>(jackson3JsonPersonTemplate, stringFactory, personFactory, jackson2JsonSerializer, "Jackson3"), //
 				new Fixture<>(genericJackson2JsonPersonTemplate, stringFactory, personFactory, genericJackson2JsonSerializer,
-						"Generic Jackson 2"));
+						"Generic Jackson 2"),
+				new Fixture<>(genericJacksonJsonPersonTemplate, stringFactory, personFactory, genericJacksonJsonSerializer,
+						"Generic Jackson 3"));
 
 		if (clusterAvailable()) {
 
